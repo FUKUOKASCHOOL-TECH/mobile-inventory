@@ -60,7 +60,14 @@ export function useSession() {
 
     // Supabase Authの状態変更を監視
     const { data: { subscription } } = onAuthStateChange((user) => {
-      setState(user)
+      // ログアウト時は必ずnullを設定
+      if (user === null) {
+        setState(null)
+        // ローカルストレージもクリア（念のため）
+        clearSession()
+      } else {
+        setState(user)
+      }
     })
 
     return () => {
@@ -71,33 +78,53 @@ export function useSession() {
   }, [])
 
   const set = useCallback(async (data) => {
-    // Supabaseが設定されている場合は、セッションは自動的に管理される
-    // ここではローカルストレージとの互換性のために保存
+    // Supabaseが設定されている場合は、セッションはSupabaseが自動的に管理する
+    // ローカルストレージには保存しない（Supabaseのセッションと競合するため）
     if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      // フォールバック: ローカルストレージに保存
       setSession(data)
       setState(getSession())
     } else {
-      // Supabase使用時は、セッション情報をローカルストレージにも保存（互換性のため）
-      setSession(data)
+      // Supabase使用時は、状態のみ更新（Supabaseがセッションを管理）
       setState(data)
     }
   }, [])
 
   const clear = useCallback(async () => {
     try {
+      // まず状態をnullに設定（即座に反映）
+      setState(null)
+      
       // Supabaseが設定されている場合はSupabaseからログアウト
       if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
         await authSignOut()
-      } else {
-        // フォールバック: ローカルストレージをクリア
-        clearSession()
       }
-      setState(null)
+      
+      // ローカルストレージも必ずクリア（Supabase使用時も）
+      clearSession()
+      
+      // Supabaseのセッションストレージもクリア
+      if (typeof window !== 'undefined') {
+        const keys = Object.keys(localStorage)
+        keys.forEach(key => {
+          if (key.startsWith('sb-') || key.includes('supabase')) {
+            localStorage.removeItem(key)
+          }
+        })
+      }
     } catch (error) {
       console.error("ログアウトエラー:", error)
-      // エラーが発生してもローカルストレージはクリア
-      clearSession()
+      // エラーが発生しても状態とストレージはクリア
       setState(null)
+      clearSession()
+      if (typeof window !== 'undefined') {
+        const keys = Object.keys(localStorage)
+        keys.forEach(key => {
+          if (key.startsWith('sb-') || key.includes('supabase')) {
+            localStorage.removeItem(key)
+          }
+        })
+      }
     }
   }, [])
 

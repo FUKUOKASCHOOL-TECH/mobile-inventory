@@ -58,9 +58,10 @@ export default function App() {
           isMobile={isMobile}
           userName={session.userName}
           provider={session.provider}
-          onLogout={() => {
-            clear()
-            navigate("/auth", { replace: true })
+          onLogout={async () => {
+            await clear()
+            // ログアウト後に確実に認証ページにリダイレクト
+            window.location.href = "/auth"
           }}
         />
         <div className="flex gap-4 px-3 pb-6">
