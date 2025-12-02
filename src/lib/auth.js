@@ -200,9 +200,20 @@ export async function signInWithEmail(email, password) {
 // ログアウト（Supabase Auth使用）
 export async function signOut() {
   try {
-    const { error } = await supabase.auth.signOut()
+    // Supabaseのセッションをクリア
+    const { error } = await supabase.auth.signOut({ scope: 'global' })
     if (error) {
       throw error
+    }
+    // セッションストレージもクリア（念のため）
+    if (typeof window !== 'undefined') {
+      // Supabaseが使用するストレージキーをクリア
+      const keys = Object.keys(localStorage)
+      keys.forEach(key => {
+        if (key.startsWith('sb-') || key.includes('supabase')) {
+          localStorage.removeItem(key)
+        }
+      })
     }
     return { success: true }
   } catch (error) {
@@ -252,7 +263,14 @@ export async function getCurrentSession() {
 // Supabase Authのセッション変更を監視
 export function onAuthStateChange(callback) {
   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-    if (session) {
+    // SIGNED_OUTイベントの場合は必ずnullを返す
+    if (event === 'SIGNED_OUT' || !session) {
+      callback(null)
+      return
+    }
+    
+    // セッションがある場合のみユーザー情報を返す
+    if (session && session.user) {
       const user = session.user
       const provider = user.app_metadata?.provider || "email"
       callback({

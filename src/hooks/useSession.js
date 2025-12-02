@@ -60,7 +60,14 @@ export function useSession() {
 
     // Supabase Authの状態変更を監視
     const { data: { subscription } } = onAuthStateChange((user) => {
-      setState(user)
+      // ログアウト時は必ずnullを設定
+      if (user === null) {
+        setState(null)
+        // ローカルストレージもクリア（念のため）
+        clearSession()
+      } else {
+        setState(user)
+      }
     })
 
     return () => {
@@ -85,18 +92,39 @@ export function useSession() {
 
   const clear = useCallback(async () => {
     try {
+      // まず状態をnullに設定（即座に反映）
+      setState(null)
+      
       // Supabaseが設定されている場合はSupabaseからログアウト
       if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY) {
         await authSignOut()
       }
+      
       // ローカルストレージも必ずクリア（Supabase使用時も）
       clearSession()
-      setState(null)
+      
+      // Supabaseのセッションストレージもクリア
+      if (typeof window !== 'undefined') {
+        const keys = Object.keys(localStorage)
+        keys.forEach(key => {
+          if (key.startsWith('sb-') || key.includes('supabase')) {
+            localStorage.removeItem(key)
+          }
+        })
+      }
     } catch (error) {
       console.error("ログアウトエラー:", error)
-      // エラーが発生してもローカルストレージはクリア
-      clearSession()
+      // エラーが発生しても状態とストレージはクリア
       setState(null)
+      clearSession()
+      if (typeof window !== 'undefined') {
+        const keys = Object.keys(localStorage)
+        keys.forEach(key => {
+          if (key.startsWith('sb-') || key.includes('supabase')) {
+            localStorage.removeItem(key)
+          }
+        })
+      }
     }
   }, [])
 
