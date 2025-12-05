@@ -35,3 +35,6 @@ lerna-debug.log*
 *.sln
 *.sw?
 
+# Output data
+outputs/pictures/
+outputs/jsons/
