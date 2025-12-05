@@ -1,4 +1,4 @@
-// picture_trance_server.js
+// picture_trance_server.cjs
 require("dotenv").config({ path: ".env.local" });
 
 const express = require("express");
@@ -8,7 +8,9 @@ const path = require("path");
 const fs = require("fs");
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
@@ -31,14 +33,12 @@ app.post("/parse-image", upload.single("image"), (req, res) => {
  * /transcribe-image
  * 受け取った画像をそのまま Gemini（@google/genai）へ送り、
  * レシート情報を JSON 形式で抽出して返す。
- *
- * 要: 環境変数 GOOGLE_API_KEY が設定されていること（または GOOGLE_APPLICATION_CREDENTIALS）
  */
 app.post("/transcribe-image", upload.single("image"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "no image uploaded" });
 
-  if (!process.env.GOOGLE_API_KEY && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    return res.status(400).json({ error: "missing GOOGLE_API_KEY or GOOGLE_APPLICATION_CREDENTIALS" });
+  if (!process.env.GOOGLE_API_KEY) {
+    return res.status(400).json({ error: "missing GOOGLE_API_KEY" });
   }
 
   const filepath = req.file.path;
@@ -47,37 +47,53 @@ app.post("/transcribe-image", upload.single("image"), async (req, res) => {
     const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
     const imageBytes = fs.readFileSync(filepath);
+    
     const b64 = imageBytes.toString("base64");
     const mime = req.file.mimetype || "image/png";
 
+    // ▼▼▼ プロンプト変更箇所 ▼▼▼
     const promptText =
       "この画像はレシートの写真です。画像から次の項目を抽出して、必ずJSONで返してください。" +
       " 返却するJSONスキーマ:\n" +
       "{\n" +
-      '  "store": string|null,\n' +
-      '  "date": string|null,\n' +
-      '  "total": number|null,\n' +
-      '  "currency": string|null,\n' +
-      '  "items": [ { "name": string|null, "price": number|null } ]\n' +
+      '  "store": string|null,      // 購入店舗名\n' +
+      '  "tel": string|null,        // 電話番号\n' +
+      '  "date": string|null,       // 購入日 (YYYY-MM-DD)\n' +
+      '  "time": string|null,       // 購入時間 (HH:MM)\n' +
+      '  "items": [\n' +
+      '    {\n' +
+      '      "name": string|null,       // 商品名\n' +
+      '      "unit_price": number|null, // 商品単価\n' +
+      '      "quantity": number|null,   // 商品購入数\n' +
+      '      "price": number|null       // 商品価格 (小計: 単価×数量の金額)\n' +
+      '    }\n' +
+      '  ],\n' +
+      '  "total": number|null       // 合計請求金額\n' +
       "}\n\n" +
       "見つからない項目は null にしてください。出力は余分な説明を含めず、純粋に JSON のみを返してください。";
+    // ▲▲▲ プロンプト変更箇所終わり ▲▲▲
 
-    // GenAI に送る contents（画像パートに data を明示）
     const contents = [
       {
+        role: "user",
         parts: [
-          { type: "input_text", text: promptText },
-          { type: "input_image", data: { image: { mime_type: mime, b64 } } }
+          { text: promptText },
+          {
+            inlineData: {
+              mimeType: mime,
+              data: b64
+            }
+          }
         ]
       }
     ];
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
+      model: "gemini-2.5-pro", // エラー回避のため安定版を使用
       contents
     });
 
-    // SDKの戻り値からテキスト抽出（互換性を持たせる）
+    // SDKの戻り値からテキスト抽出
     const text =
       response?.text ||
       response?.output?.[0]?.content?.map(c => c?.text || "").join("\n") ||
@@ -101,7 +117,6 @@ app.post("/transcribe-image", upload.single("image"), async (req, res) => {
     if (parsed) {
       return res.json({ source: "genai", text, parsed });
     } else {
-      // GenAI は成功したが JSON 抽出に失敗した場合の情報返却
       return res.status(502).json({
         error: "genai_unparsable",
         detail: { text, rawResponse: response }
@@ -117,8 +132,7 @@ app.post("/transcribe-image", upload.single("image"), async (req, res) => {
             status: err.response.status,
             data: err.response.data || err.response.body || null
           }
-        : null,
-      stack: process.env.NODE_ENV !== "production" ? err.stack : undefined
+        : null
     };
     return res.status(500).json({ error: "genai_failed", detail });
   }
