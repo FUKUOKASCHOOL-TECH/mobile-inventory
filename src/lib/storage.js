@@ -149,6 +149,25 @@ export function addChatMessage(msg) {
   emit("chat")
 }
 
+export function deleteChatMessage(msgId) {
+  const list = getChat()
+  const next = list.filter((x) => x.id !== msgId)
+  safeSet(KEY_CHAT, next)
+  emit("chat")
+}
+
+export function updateChatMessage(msgId, updatedText) {
+  const list = getChat()
+  const next = list.map((x) => {
+    if (x.id === msgId) {
+      return { ...x, text: updatedText, edited: true, editedAt: nowIso() }
+    }
+    return x
+  })
+  safeSet(KEY_CHAT, next)
+  emit("chat")
+}
+
 export function getLending() {
   const list = safeGet(KEY_LENDING, [])
   if (!Array.isArray(list)) {
