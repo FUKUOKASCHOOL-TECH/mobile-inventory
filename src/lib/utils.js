@@ -60,11 +60,11 @@ export function parseQrValue(raw) {
 
 export function genreToDiscordChannelKey(genre) {
   const g = String(genre || "").toLowerCase()
-  if (g === "kitchen") return "channel_kitchen"
-  if (g === "bath") return "channel_bath"
-  if (g === "consumable") return "channel_consumable"
-  if (g === "tool") return "channel_tool"
-  return "channel_other"
+  if (g === "kitchen") return "kitchen"
+  if (g === "bath") return "bath"
+  if (g === "consumable") return "consumable"
+  if (g === "tool") return "tool"
+  return "other"
 }
 
 export function dispatchToast(message, variant = "default") {
