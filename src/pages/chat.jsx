@@ -30,11 +30,11 @@ function Bubble({ msg, mine }) {
       <div
         className={[
           "max-w-[85%] rounded-3xl border px-4 py-3 text-sm leading-relaxed",
-          mine ? "border-zinc-700 bg-zinc-900/60 text-zinc-100" : msg.type === "system" ? "border-emerald-900/40 bg-emerald-950/30 text-emerald-100" : "border-zinc-900 bg-zinc-950 text-zinc-200"
+          "border-gray-300 bg-white text-black"
         ].join(" ")}
       >
         <div className="whitespace-pre-wrap break-words">{msg.text}</div>
-        <div className="mt-2 text-[11px] opacity-70">{new Date(msg.at).toLocaleString("ja-JP")}</div>
+        <div className="mt-2 text-[11px] opacity-70 text-black">{new Date(msg.at).toLocaleString("ja-JP")}</div>
       </div>
     </div>
   )
@@ -63,28 +63,28 @@ export default function Chat() {
   return (
     <div className="pt-4">
       <div className="mx-auto w-full max-w-3xl">
-        <div className="rounded-3xl border border-zinc-900 bg-zinc-950 p-4">
-          <div className="text-base font-semibold text-zinc-100">チャット</div>
-          <div className="mt-1 text-xs text-zinc-500">自動投稿: lend / return / stock_zero（Discord通知モック）</div>
+        <div className="rounded-3xl border border-gray-300 bg-white p-4 shadow text-black">
+          <div className="text-base font-semibold text-black">チャット</div>
+          <div className="mt-1 text-xs text-black">自動投稿: lend / return / stock_zero（Discord通知モック）</div>
         </div>
 
-        <div className="mt-3 rounded-3xl border border-zinc-900 bg-zinc-950 p-4">
+        <div className="mt-3 rounded-3xl border border-gray-300 bg-white p-4">
           <div className="flex flex-col gap-3">
             {ordered.map((m) => (
               <Bubble key={m.id} msg={m} mine={m.type === "user" && m.userName === (session?.userName || "")} />
             ))}
-            {ordered.length === 0 ? <div className="text-sm text-zinc-500">まだメッセージがありません。</div> : null}
+            {ordered.length === 0 ? <div className="text-sm text-black">まだメッセージがありません。</div> : null}
           </div>
         </div>
 
         <form onSubmit={submit} className="mt-3 flex gap-2">
           <input
-            className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3 py-3 text-sm text-zinc-100 placeholder:text-zinc-600"
+            className="w-full rounded-2xl border border-gray-300 bg-white px-3 py-3 text-sm text-black placeholder:text-gray-500"
             placeholder="メッセージを入力"
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
-          <button className="shrink-0 rounded-2xl border border-zinc-800 bg-zinc-900/50 px-5 py-3 text-sm text-zinc-100 active:scale-[0.99]" type="submit">
+          <button className="shrink-0 rounded-2xl border border-gray-300 bg-white px-5 py-3 text-sm text-black active:scale-[0.99]" type="submit">
             送信
           </button>
         </form>

@@ -124,14 +124,14 @@ export default function Scan() {
 
   return (
     <div className="pt-4">
-      <div className="rounded-3xl border border-zinc-900 bg-zinc-950 p-4">
+      <div className="rounded-3xl border border-gray-300 bg-white p-4 text-black">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-base font-semibold text-zinc-100">QRスキャン</h2>
-            <p className="mt-1 text-xs text-zinc-500">対応ブラウザではカメラでQRを読み取ります。非対応/拒否時は手入力に切り替えます。</p>
+            <h2 className="text-base font-semibold text-black">QRスキャン</h2>
+            <p className="mt-1 text-xs text-black">対応ブラウザではカメラでQRを読み取ります。非対応/拒否時は手入力に切り替えます。</p>
           </div>
           <button
-            className="rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-xs text-zinc-100 active:scale-[0.99]"
+            className="rounded-2xl border border-gray-300 bg-white px-3 py-2 text-xs text-black active:scale-[0.99]"
             onClick={startScan}
             type="button"
           >
@@ -139,34 +139,34 @@ export default function Scan() {
           </button>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-3xl border border-zinc-900 bg-black">
+        <div className="mt-4 overflow-hidden rounded-3xl border border-gray-300 bg-white">
           {status === "fallback" ? (
             <div className="flex flex-col items-center gap-2 p-10 text-center">
-              <IconCameraOff className="h-10 w-10 text-zinc-500" />
-              <div className="text-sm font-semibold text-zinc-100">手入力モード</div>
-              <div className="text-xs text-zinc-500">BarcodeDetector非対応、またはカメラ起動に失敗しました。</div>
+              <IconCameraOff className="h-10 w-10 text-black" />
+              <div className="text-sm font-semibold text-black">手入力モード</div>
+              <div className="text-xs text-black">BarcodeDetector非対応、またはカメラ起動に失敗しました。</div>
             </div>
           ) : (
             <video ref={videoRef} className="aspect-video w-full object-cover" playsInline muted />
           )}
         </div>
 
-        {error ? <div className="mt-3 text-xs text-red-300">{error}</div> : null}
+        {error ? <div className="mt-3 text-xs text-red-600">{error}</div> : null}
 
         <form onSubmit={submitManual} className="mt-4 flex gap-2">
           <input
-            className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600"
+            className="w-full rounded-2xl border border-gray-300 bg-white px-3 py-2 text-sm text-black placeholder:text-gray-500"
             placeholder="手入力（例: item_... / item:xxx / URL）"
             value={manual}
             onChange={(e) => setManual(e.target.value)}
           />
-          <button className="shrink-0 rounded-2xl border border-zinc-800 bg-zinc-900/50 px-4 py-2 text-sm text-zinc-100 active:scale-[0.99]" type="submit">
+          <button className="shrink-0 rounded-2xl border border-gray-300 bg-white px-4 py-2 text-sm text-black active:scale-[0.99]" type="submit">
             開く
           </button>
         </form>
 
-        <div className="mt-4 text-[11px] text-zinc-500">
-          ヒント: 本番はQRの中身を <span className="text-zinc-300">/item/:id</span> のURLにすると運用が楽です。
+        <div className="mt-4 text-[11px] text-black">
+          ヒント: 本番はQRの中身を <span className="text-black font-medium">/item/:id</span> のURLにすると運用が楽です。
         </div>
       </div>
     </div>
