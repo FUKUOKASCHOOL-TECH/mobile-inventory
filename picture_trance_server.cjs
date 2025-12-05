@@ -123,14 +123,17 @@ app.post("/transcribe-image", upload.single("image"), async (req, res) => {
 
     // パース成功時のみファイルに保存
     if (parsed) {
-      // 拡張子を .json に変えて保存
-      const jsonFileName = path.parse(filename).name + ".json";
+      // 出力ファイル名を YYYYMMDDHHmmss の形式にする
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+      const jsonFileName = `${timestamp}.json`;
       const jsonPath = path.join(JSONS_DIR, jsonFileName);
       
       fs.writeFileSync(jsonPath, JSON.stringify(parsed, null, 2), "utf8");
       console.log(`Saved JSON to: ${jsonPath}`);
 
-      return res.json({ source: "genai", text, parsed, saved: true });
+      return res.json({ source: "genai", text, parsed, saved: true, filename: jsonFileName });
     } else {
       // パース失敗時はJSONファイルを出力しない
       return res.status(502).json({

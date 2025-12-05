@@ -44,7 +44,7 @@ export default function Sidebar() {
   return (
     <aside className="sticky top-[66px] hidden h-[calc(100vh-76px)] w-[220px] shrink-0 md:block">
       <div className="flex flex-col gap-2 pt-4">
-        <LinkItem to="/scan" icon={IconScan} label="スキャン" />
+        <LinkItem to="/scan" icon={IconScan} label="レシート登録" />
         <LinkItem to="/inventory" icon={IconBox} label="在庫" />
         <LinkItem to="/chat" icon={IconChat} label="チャット" />
       </div>

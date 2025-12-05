@@ -37,7 +37,7 @@ export default function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-100 bg-zinc-100/90 backdrop-blur md:hidden">
       <div className="mx-auto flex max-w-6xl px-2">
-        <NavItem to="/scan" icon={IconScan} label="スキャン" />
+        <NavItem to="/scan" icon={IconScan} label="レシート登録" />
         <NavItem to="/inventory" icon={IconBox} label="在庫" />
         <NavItem to="/chat" icon={IconChat} label="チャット" />
       </div>
