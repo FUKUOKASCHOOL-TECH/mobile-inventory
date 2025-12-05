@@ -28,7 +28,7 @@ import { clamp } from "./lib/utils.js"
 export default function App() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { session, clear } = useSession()
+  const { session, clear, loading } = useSession()
   const [width, setWidth] = useState(() => window.innerWidth)
 
   useEffect(() => {
@@ -40,6 +40,15 @@ export default function App() {
   const isMobile = useMemo(() => width < 768, [width])
   const contentPaddingBottom = useMemo(() => clamp(isMobile ? 76 : 16, 16, 96), [isMobile])
 
+  // セッション読み込み中は何も表示しない（またはローディング表示）
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-zinc-400">読み込み中...</div>
+      </div>
+    )
+  }
+
   if (!session) return <Navigate to="/auth" replace state={{ from: location.pathname }} />
 
   return (
@@ -49,9 +58,10 @@ export default function App() {
           isMobile={isMobile}
           userName={session.userName}
           provider={session.provider}
-          onLogout={() => {
-            clear()
-            navigate("/auth", { replace: true })
+          onLogout={async () => {
+            await clear()
+            // ログアウト後に確実に認証ページにリダイレクト
+            window.location.href = "/auth"
           }}
         />
         <div className="flex gap-4 px-3 pb-6">
