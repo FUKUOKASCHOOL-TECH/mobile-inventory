@@ -149,7 +149,7 @@ export default function Scan() {
 
   return (
     <div className="pt-4">
-      <div className="rounded-3xl border border-zinc-900 bg-zinc-950 p-4">
+      <div className="rounded-3xl border border-gray-300 bg-white p-4 text-black">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-zinc-100">画像アップロード</h2>
@@ -208,18 +208,18 @@ export default function Scan() {
 
         <form onSubmit={submitManual} className="mt-4 flex gap-2">
           <input
-            className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600"
+            className="w-full rounded-2xl border border-gray-300 bg-white px-3 py-2 text-sm text-black placeholder:text-gray-500"
             placeholder="手入力（例: item_... / item:xxx / URL）"
             value={manual}
             onChange={(e) => setManual(e.target.value)}
           />
-          <button className="shrink-0 rounded-2xl border border-zinc-800 bg-zinc-900/50 px-4 py-2 text-sm text-zinc-100 active:scale-[0.99]" type="submit">
+          <button className="shrink-0 rounded-2xl border border-gray-300 bg-white px-4 py-2 text-sm text-black active:scale-[0.99]" type="submit">
             開く
           </button>
         </form>
 
-        <div className="mt-4 text-[11px] text-zinc-500">
-          ヒント: 本番はQRの中身を <span className="text-zinc-300">/item/:id</span> のURLにすると運用が楽です。
+        <div className="mt-4 text-[11px] text-black">
+          ヒント: 本番はQRの中身を <span className="text-black font-medium">/item/:id</span> のURLにすると運用が楽です。
         </div>
 
         {/* 文字起こし結果表示 */}

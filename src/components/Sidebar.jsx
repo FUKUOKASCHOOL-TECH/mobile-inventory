@@ -29,8 +29,8 @@ function LinkItem({ to, icon: Icon, label }) {
         [
           "flex items-center gap-3 rounded-2xl border px-3 py-2 text-sm transition",
           isActive
-            ? "border-zinc-700 bg-zinc-900 text-zinc-100"
-            : "border-zinc-900 bg-zinc-950 text-zinc-300 hover:border-zinc-800 hover:bg-zinc-900/50"
+            ? "border-gray-400 bg-gray-200 text-black"
+            : "border-gray-300 bg-white text-black hover:border-gray-400 hover:bg-gray-100"
         ].join(" ")
       }
     >
@@ -47,10 +47,6 @@ export default function Sidebar() {
         <LinkItem to="/scan" icon={IconScan} label="スキャン" />
         <LinkItem to="/inventory" icon={IconBox} label="在庫" />
         <LinkItem to="/chat" icon={IconChat} label="チャット" />
-      </div>
-      <div className="mt-6 rounded-2xl border border-zinc-900 bg-zinc-950 p-3 text-xs text-zinc-400">
-        <div className="font-semibold text-zinc-300">チーム開発メモ</div>
-        <div className="mt-1 leading-relaxed">localStorage + イベント通知で状態同期。将来はdiscordMockをWebhook/Botに差し替え。</div>
       </div>
     </aside>
   )
