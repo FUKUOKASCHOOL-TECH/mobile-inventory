@@ -34,6 +34,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.send("API is running");
+});
+
 // 画像を受け取ってIDを返すだけのルート (必要であれば)
 app.post("/parse-image", upload.single("image"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "no image uploaded" });
