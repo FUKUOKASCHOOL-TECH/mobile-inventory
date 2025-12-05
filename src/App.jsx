@@ -52,7 +52,7 @@ export default function App() {
   if (!session) return <Navigate to="/auth" replace state={{ from: location.pathname }} />
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#1E3A8A]">
       <div className="mx-auto max-w-6xl">
         <Navbar
           isMobile={isMobile}

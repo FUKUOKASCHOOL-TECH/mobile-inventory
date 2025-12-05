@@ -48,10 +48,6 @@ export default function Sidebar() {
         <LinkItem to="/inventory" icon={IconBox} label="在庫" />
         <LinkItem to="/chat" icon={IconChat} label="チャット" />
       </div>
-      <div className="mt-6 rounded-2xl border border-zinc-900 bg-zinc-950 p-3 text-xs text-zinc-400">
-        <div className="font-semibold text-zinc-300">チーム開発メモ</div>
-        <div className="mt-1 leading-relaxed">localStorage + イベント通知で状態同期。将来はdiscordMockをWebhook/Botに差し替え。</div>
-      </div>
     </aside>
   )
 }
