@@ -28,13 +28,13 @@ import { supabase } from "../lib/supabase.js"
 function LoginButton({ label, provider, onClick, loading = false }) {
   return (
     <button
-      className="w-full rounded-3xl border border-zinc-800 bg-zinc-950 px-4 py-4 text-left transition hover:border-zinc-700 hover:bg-zinc-900/40 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full rounded-3xl border border-gray-300 bg-white px-4 py-4 text-left transition hover:border-gray-400 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
       onClick={onClick}
       type="button"
       disabled={loading}
     >
-      <div className="text-sm font-semibold text-zinc-100">{label}</div>
-      <div className="mt-1 text-xs text-zinc-500">provider: {provider}</div>
+      <div className="text-sm font-semibold text-black">{label}</div>
+      <div className="mt-1 text-xs text-black">provider: {provider}</div>
     </button>
   )
 }
@@ -93,7 +93,7 @@ function EmailAuthForm({ onSuccess }) {
   }
 
   return (
-    <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4">
+    <div className="mt-6 rounded-2xl border border-gray-300 bg-white p-4 text-black">
       <div className="mb-4 flex gap-2">
         <button
           type="button"
@@ -103,8 +103,8 @@ function EmailAuthForm({ onSuccess }) {
           }}
           className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold transition ${
             mode === "login"
-              ? "bg-zinc-800 text-zinc-100"
-              : "bg-transparent text-zinc-400 hover:text-zinc-200"
+              ? "bg-gray-200 text-black"
+              : "bg-transparent text-black/80 hover:text-black"
           }`}
         >
           ログイン
@@ -117,8 +117,8 @@ function EmailAuthForm({ onSuccess }) {
           }}
           className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold transition ${
             mode === "register"
-              ? "bg-zinc-800 text-zinc-100"
-              : "bg-transparent text-zinc-400 hover:text-zinc-200"
+              ? "bg-gray-200 text-black"
+              : "bg-transparent text-black/80 hover:text-black"
           }`}
         >
           新規登録
@@ -128,35 +128,35 @@ function EmailAuthForm({ onSuccess }) {
       <form onSubmit={handleSubmit} className="space-y-3">
         {mode === "register" && (
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1">ユーザー名</label>
+            <label className="block text-xs font-medium text-black mb-1">ユーザー名</label>
             <input
               type="text"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-black placeholder:text-gray-500 focus:border-gray-400 focus:outline-none"
               placeholder="ユーザー名を入力"
               disabled={loading}
             />
           </div>
         )}
         <div>
-          <label className="block text-xs font-medium text-zinc-400 mb-1">メールアドレス</label>
+          <label className="block text-xs font-medium text-black mb-1">メールアドレス</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-black placeholder:text-gray-500 focus:border-gray-400 focus:outline-none"
             placeholder="email@example.com"
             disabled={loading}
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-zinc-400 mb-1">パスワード</label>
+          <label className="block text-xs font-medium text-black mb-1">パスワード</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-black placeholder:text-gray-500 focus:border-gray-400 focus:outline-none"
             placeholder="パスワードを入力"
             disabled={loading}
           />
@@ -169,7 +169,7 @@ function EmailAuthForm({ onSuccess }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-700 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-xl bg-gray-200 px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-300 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? "処理中..." : mode === "register" ? "アカウントを作成" : "ログイン"}
         </button>
@@ -284,9 +284,9 @@ export default function Auth() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-10">
-      <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-        <h1 className="text-xl font-bold text-zinc-100">ログイン</h1>
-        <p className="mt-2 text-sm text-zinc-400">
+      <div className="rounded-3xl border border-gray-300 bg-white p-6 text-black">
+        <h1 className="text-xl font-bold text-black">ログイン</h1>
+        <p className="mt-2 text-sm text-black">
           {isSupabaseConfigured
             ? "Google、GitHubまたはメールアドレスでログインできます。"
             : "Supabaseが設定されていないため、ローカルストレージ認証を使用します。"}
@@ -310,18 +310,18 @@ export default function Auth() {
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-800"></div>
+              <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-zinc-950 px-2 text-zinc-500">または</span>
+              <span className="bg-white px-2 text-black">または</span>
             </div>
           </div>
         </div>
 
         <EmailAuthForm onSuccess={handleEmailAuthSuccess} />
 
-        <div className="mt-6 rounded-2xl border border-zinc-900 bg-zinc-900/30 p-4 text-xs text-zinc-400">
-          <div className="font-semibold text-zinc-300">認証について</div>
+        <div className="mt-6 rounded-2xl border border-gray-300 bg-white p-4 text-xs text-black">
+          <div className="font-semibold text-black">認証について</div>
           <div className="mt-1 leading-relaxed">
             {isSupabaseConfigured
               ? "Supabase Authを使用した認証です。Google、GitHub認証はOAuth、メール/パスワード認証はSupabaseで管理されます。"
