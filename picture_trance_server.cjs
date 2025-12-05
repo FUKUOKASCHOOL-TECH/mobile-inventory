@@ -1,3 +1,7 @@
+app.get("/", (req, res) => {
+  res.send("API is running");
+});
+
 // picture_trance_server.cjs
 require("dotenv").config({ path: ".env.local" });
 
