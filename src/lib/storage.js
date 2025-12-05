@@ -23,6 +23,7 @@ const KEY_INVENTORY = "inventory_v1"
 const KEY_CHAT = "chat_v1"
 const KEY_SESSION = "session_v1"
 const KEY_LENDING = "lending_v1"
+const KEY_USERS = "users_v1"
 
 const STORAGE_EVENT = "sh-storage"
 const listeners = new Set()
@@ -185,4 +186,50 @@ export function clearSession() {
   emit("session")
 }
 
-export const StorageKeys = { KEY_INVENTORY, KEY_CHAT, KEY_SESSION, KEY_LENDING }
+// ユーザー管理（メール/パスワード認証用）
+export function getUsers() {
+  const list = safeGet(KEY_USERS, [])
+  if (!Array.isArray(list)) {
+    safeSet(KEY_USERS, [])
+    return []
+  }
+  return list
+}
+
+export function getUserByEmail(email) {
+  const users = getUsers()
+  return users.find((u) => u.email === email) || null
+}
+
+export function createUser(userData) {
+  const users = getUsers()
+  const existing = getUserByEmail(userData.email)
+  if (existing) {
+    return { success: false, error: "このメールアドレスは既に登録されています" }
+  }
+  const newUser = {
+    id: generateId("user_"),
+    email: String(userData.email || ""),
+    password: String(userData.password || ""), // 本番環境ではハッシュ化が必要
+    userName: String(userData.userName || ""),
+    provider: "email",
+    createdAt: nowIso()
+  }
+  const next = [newUser, ...users]
+  safeSet(KEY_USERS, next)
+  emit("users")
+  return { success: true, user: newUser }
+}
+
+export function verifyUser(email, password) {
+  const user = getUserByEmail(email)
+  if (!user) {
+    return { success: false, error: "メールアドレスまたはパスワードが正しくありません" }
+  }
+  if (user.password !== password) {
+    return { success: false, error: "メールアドレスまたはパスワードが正しくありません" }
+  }
+  return { success: true, user }
+}
+
+export const StorageKeys = { KEY_INVENTORY, KEY_CHAT, KEY_SESSION, KEY_LENDING, KEY_USERS }
