@@ -22,7 +22,7 @@ import React, { useState, useEffect } from "react"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 import { useSession } from "../hooks/useSession.js"
 import { dispatchToast } from "../lib/utils.js"
-import { signInWithGoogle, signUpWithEmail, signInWithEmail } from "../lib/auth.js"
+import { signInWithGoogle, signInWithGitHub, signUpWithEmail, signInWithEmail, transformUserData } from "../lib/auth.js"
 import { supabase } from "../lib/supabase.js"
 
 function LoginButton({ label, provider, onClick, loading = false }) {
@@ -184,7 +184,7 @@ export default function Auth() {
   const [searchParams] = useSearchParams()
   const { set, session } = useSession()
   const from = location.state?.from || "/scan"
-  const [loading, setLoading] = useState({ google: false })
+  const [loading, setLoading] = useState({ google: false, github: false })
 
   // Supabase OAuthコールバック処理
   useEffect(() => {
@@ -210,15 +210,7 @@ export default function Auth() {
           }
 
           if (newSession) {
-            const user = newSession.user
-            const provider = user.app_metadata?.provider || "email"
-            const userData = {
-              userName: user.user_metadata?.user_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "ユーザー",
-              email: user.email,
-              provider: provider,
-              loggedInAt: new Date(user.last_sign_in_at || user.created_at).toISOString()
-            }
-            
+            const userData = transformUserData(newSession.user)
             set(userData)
             dispatchToast("ログインしました", "success")
             navigate(from, { replace: true })
@@ -261,6 +253,27 @@ export default function Auth() {
     }
   }
 
+  const handleGitHubLogin = async () => {
+    setLoading((prev) => ({ ...prev, github: true }))
+    try {
+      const result = await signInWithGitHub()
+      if (result.redirect) {
+        // OAuth認証の場合はリダイレクトされる
+        // コールバック処理はuseEffectで行う
+        return
+      }
+      if (result.success && result.user) {
+        set(result.user)
+        dispatchToast("ログインしました", "success")
+        navigate(from, { replace: true })
+      }
+    } catch (error) {
+      dispatchToast(error.message || "GitHub認証に失敗しました", "error")
+    } finally {
+      setLoading((prev) => ({ ...prev, github: false }))
+    }
+  }
+
 
   const handleEmailAuthSuccess = (userData) => {
     set(userData)
@@ -275,7 +288,7 @@ export default function Auth() {
         <h1 className="text-xl font-bold text-zinc-100">ログイン</h1>
         <p className="mt-2 text-sm text-zinc-400">
           {isSupabaseConfigured
-            ? "Googleまたはメールアドレスでログインできます。"
+            ? "Google、GitHubまたはメールアドレスでログインできます。"
             : "Supabaseが設定されていないため、ローカルストレージ認証を使用します。"}
         </p>
 
@@ -285,6 +298,12 @@ export default function Auth() {
             provider="google"
             onClick={handleGoogleLogin}
             loading={loading.google}
+          />
+          <LoginButton
+            label="GitHubでログイン"
+            provider="github"
+            onClick={handleGitHubLogin}
+            loading={loading.github}
           />
         </div>
 
@@ -305,7 +324,7 @@ export default function Auth() {
           <div className="font-semibold text-zinc-300">認証について</div>
           <div className="mt-1 leading-relaxed">
             {isSupabaseConfigured
-              ? "Supabase Authを使用した認証です。Google認証はOAuth、メール/パスワード認証はSupabaseで管理されます。"
+              ? "Supabase Authを使用した認証です。Google、GitHub認証はOAuth、メール/パスワード認証はSupabaseで管理されます。"
               : "Supabaseが設定されていないため、ローカルストレージに保存されます。本番環境ではSupabase Authの使用を推奨します。"}
           </div>
         </div>

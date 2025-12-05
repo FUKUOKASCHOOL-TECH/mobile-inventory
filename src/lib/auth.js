@@ -18,13 +18,24 @@
 @property {string} memo
 */
 import { supabase } from "./supabase.js"
-import { dispatchToast } from "./utils.js"
 
-// Google OAuth認証（Supabase Auth使用）
-export async function signInWithGoogle() {
+// ユーザーデータ変換ヘルパー関数
+export function transformUserData(user) {
+  const provider = user.app_metadata?.provider || "email"
+  return {
+    id: user.id,
+    email: user.email,
+    userName: user.user_metadata?.user_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "ユーザー",
+    provider: provider,
+    loggedInAt: new Date(user.last_sign_in_at || user.created_at).toISOString()
+  }
+}
+
+// OAuth認証共通関数
+async function signInWithOAuthProvider(providerName) {
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
+      provider: providerName,
       options: {
         redirectTo: `${window.location.origin}/auth`
       }
@@ -43,9 +54,9 @@ export async function signInWithGoogle() {
       return {
         success: true,
         user: {
-          userName: "Googleユーザー",
-          email: `google_${Date.now()}@example.com`,
-          provider: "google"
+          userName: `${providerName.charAt(0).toUpperCase() + providerName.slice(1)}ユーザー`,
+          email: `${providerName}_${Date.now()}@example.com`,
+          provider: providerName
         }
       }
     }
@@ -53,37 +64,14 @@ export async function signInWithGoogle() {
   }
 }
 
-// Discord OAuth認証（Supabase Auth使用）
-export async function signInWithDiscord() {
-  try {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "discord",
-      options: {
-        redirectTo: `${window.location.origin}/auth`
-      }
-    })
+// Google OAuth認証（Supabase Auth使用）
+export async function signInWithGoogle() {
+  return signInWithOAuthProvider("google")
+}
 
-    if (error) {
-      throw error
-    }
-
-    // OAuth認証の場合はリダイレクトされるため、ここには到達しない
-    // コールバック処理はauth.jsxで行う
-    return { success: true, redirect: true }
-  } catch (error) {
-    // Supabaseが設定されていない場合のフォールバック
-    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-      return {
-        success: true,
-        user: {
-          userName: "Discordユーザー",
-          email: `discord_${Date.now()}@example.com`,
-          provider: "discord"
-        }
-      }
-    }
-    throw error
-  }
+// GitHub OAuth認証（Supabase Auth使用）
+export async function signInWithGitHub() {
+  return signInWithOAuthProvider("github")
 }
 
 // メール/パスワード認証 - 新規登録（Supabase Auth使用）
@@ -240,16 +228,7 @@ export async function getCurrentSession() {
       return null
     }
 
-    const user = session.user
-    const provider = user.app_metadata?.provider || "email"
-    
-    return {
-      id: user.id,
-      email: user.email,
-      userName: user.user_metadata?.user_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "ユーザー",
-      provider: provider,
-      loggedInAt: new Date(user.last_sign_in_at || user.created_at).toISOString()
-    }
+    return transformUserData(session.user)
   } catch (error) {
     // Supabaseが設定されていない場合はローカルストレージから取得
     if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
@@ -271,15 +250,7 @@ export function onAuthStateChange(callback) {
     
     // セッションがある場合のみユーザー情報を返す
     if (session && session.user) {
-      const user = session.user
-      const provider = user.app_metadata?.provider || "email"
-      callback({
-        id: user.id,
-        email: user.email,
-        userName: user.user_metadata?.user_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "ユーザー",
-        provider: provider,
-        loggedInAt: new Date(user.last_sign_in_at || user.created_at).toISOString()
-      })
+      callback(transformUserData(session.user))
     } else {
       callback(null)
     }
