@@ -18,7 +18,8 @@
 @property {string} memo
 */
 // このページの責務: 画像アップロードで item 画面へ遷移する（手入力fallbackも維持）
-import React, { useEffect, useMemo, useRef, useState } from "react"
+// 追加: 画像をサーバへ送り文字起こし（OCR + optional GenAI 整形）を行う
+import React, { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { IconCameraOff } from "../components/Icons.jsx"
 import { parseQrValue } from "../lib/utils.js"
@@ -32,6 +33,8 @@ export default function Scan() {
   const [error, setError] = useState("")
   const [file, setFile] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
+  const [transcribedText, setTranscribedText] = useState(null)
+  const [transcribing, setTranscribing] = useState(false)
 
   useEffect(() => {
     return () => {
@@ -41,6 +44,7 @@ export default function Scan() {
 
   const handleFileChange = (e) => {
     setError("")
+    setTranscribedText(null)
     const f = e.target.files?.[0] || null
     setFile(f)
     if (previewUrl) {
@@ -85,6 +89,54 @@ export default function Scan() {
     }
   }
 
+  // 新規: 文字起こし処理を呼ぶ
+  const transcribeImage = async () => {
+    setError("");
+    setTranscribedText(null);
+    if (!file) {
+      pushToast("画像を選択してください", "danger");
+      return;
+    }
+    setTranscribing(true);
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await fetch("http://localhost:5000/transcribe-image", {
+        method: "POST",
+        body: fd
+      });
+      const text = await res.text();
+      // HTTPエラー時は可能なら JSON をパースして詳細を抽出
+      if (!res.ok) {
+        let json = null;
+        try { json = JSON.parse(text); } catch(e) { /* not json */ }
+        const serverMsg =
+          json?.error + (json?.detail?.message ? `: ${json.detail.message}` : "") ||
+          text || `HTTP ${res.status}`;
+        setError(serverMsg);
+        // 詳細表示用に full JSON を保持する場合は state に入れる
+        console.error("transcribe error detail:", json || text);
+        return;
+      }
+
+      const json = JSON.parse(text);
+      // 新サーバは { text, parsed } を返す想定
+      const aiText = json?.parsed ? JSON.stringify(json.parsed, null, 2) : json?.text;
+      if (aiText) {
+        setTranscribedText(aiText);
+        pushToast("文字起こし完了", "success");
+      } else {
+        setError("文字起こしは成功しましたが結果が見つかりませんでした");
+      }
+    } catch (err) {
+      // fetch/network エラーなど
+      console.error("transcribe fetch error:", err);
+      setError(`通信エラー: ${err.message}`);
+    } finally {
+      setTranscribing(false);
+    }
+  }
+
   const submitManual = (e) => {
     e.preventDefault()
     const id = parseQrValue(manual)
@@ -117,7 +169,12 @@ export default function Scan() {
           )}
         </div>
 
-        {error ? <div className="mt-3 text-xs text-red-300">{error}</div> : null}
+        {error ? (
+          <div className="mt-3 text-xs text-red-300">
+            {error}
+            {/* 開発時に詳細 JSON を出したいならここに追加で表示 */}
+          </div>
+        ) : null}
 
         <div className="mt-4 flex gap-2">
           <input
@@ -137,6 +194,16 @@ export default function Scan() {
           >
             {status === "uploading" ? "送信中..." : "送信"}
           </button>
+
+          {/* 追加: 文字起こしボタン */}
+          <button
+            className="shrink-0 rounded-2xl border border-zinc-800 bg-blue-700/80 px-4 py-2 text-sm text-white active:scale-[0.99]"
+            type="button"
+            onClick={transcribeImage}
+            disabled={transcribing}
+          >
+            {transcribing ? "文字起こし中..." : "文字起こし"}
+          </button>
         </div>
 
         <form onSubmit={submitManual} className="mt-4 flex gap-2">
@@ -154,6 +221,14 @@ export default function Scan() {
         <div className="mt-4 text-[11px] text-zinc-500">
           ヒント: 本番はQRの中身を <span className="text-zinc-300">/item/:id</span> のURLにすると運用が楽です。
         </div>
+
+        {/* 文字起こし結果表示 */}
+        {transcribedText ? (
+          <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-sm text-zinc-100">
+            <div className="font-semibold mb-2">文字起こし結果</div>
+            <pre className="whitespace-pre-wrap text-xs">{transcribedText}</pre>
+          </div>
+        ) : null}
       </div>
     </div>
   )
