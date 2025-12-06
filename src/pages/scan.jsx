@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom"
 import { IconCameraOff } from "../components/Icons.jsx"
 import { parseQrValue } from "../lib/utils.js"
 import { useToast } from "../components/Toast.jsx"
+const SERVER_URL = import.meta.env.VITE_SERVER_URL
 
 export default function Scan() {
   const navigate = useNavigate()
@@ -66,7 +67,7 @@ export default function Scan() {
     try {
       const fd = new FormData()
       fd.append("image", file)
-      const res = await fetch("http://localhost:5000/parse-image", {
+      const res = await fetch(`${SERVER_URL}/parse-image`, {
         method: "POST",
         body: fd
       })
@@ -101,7 +102,7 @@ export default function Scan() {
     try {
       const fd = new FormData();
       fd.append("image", file);
-      const res = await fetch("http://localhost:5000/transcribe-image", {
+      const res = await fetch(`${SERVER_URL}/transcribe-image`, {
         method: "POST",
         body: fd
       });
