@@ -18,7 +18,7 @@
 @property {string} memo
 */
 
-import React, { useMemo, useState } from "react"
+import React, { useMemo, useState, useEffect, useRef } from "react"
 import { useChat } from "../hooks/useChat.js"
 import { useSession } from "../hooks/useSession.js"
 import { generateId, nowIso } from "../lib/utils.js"
@@ -27,12 +27,10 @@ import { useToast } from "../components/Toast.jsx"
 import { IconTrash, IconEdit } from "../components/Icons.jsx"
 
 const GENRE_TABS = [
-  { key: "all", label: "全体連絡" },
-  { key: "kitchen", label: "キッチン" },
-  { key: "bath", label: "バスルーム" },
+  { key: "all", label: "全体" },
+  { key: "food", label: "食品" },
   { key: "consumable", label: "消耗品" },
-  { key: "tool", label: "ツール" },
-  { key: "other", label: "その他" }
+  { key: "shared", label: "共有物" }
 ]
 
 function Bubble({ msg, mine, onDelete, onEdit }) {
@@ -146,26 +144,60 @@ export default function Chat() {
   const { pushToast } = useToast()
   const [text, setText] = useState("")
   const [activeTab, setActiveTab] = useState("all")
+  const messagesEndRef = useRef(null)
+  const messagesContainerRef = useRef(null)
 
   // タブによるフィルタ
   const filteredMessages = useMemo(() => {
-    // 全体タブはすべてのメッセージを表示（必要に応じて user のみ等に変更可）
-    if (activeTab === "all") return messages
+    // 全体タブはすべてのメッセージを表示（システム通知とユーザーメッセージの両方）
+    if (activeTab === "all") {
+      return messages
+    }
 
-    // その他タブは genre によるフィルタ
+    // その他タブは item_type（category）によるフィルタ
     return messages.filter((m) => {
       if (m.type === "system" && m.payload) {
-        return String(m.payload.genre || "other").toLowerCase() === activeTab
+        // payloadにitem_typeまたはcategoryがある場合はそれを使用
+        const itemType = m.payload.item_type || m.payload.category || m.payload.genre
+        return String(itemType || "").toLowerCase() === activeTab
       }
       if (m.type === "user") {
-        return String(m.genre || "other").toLowerCase() === activeTab
+        // ユーザーメッセージはitem_typeまたはgenreでフィルタ
+        const itemType = m.item_type || m.category || m.genre
+        return String(itemType || "").toLowerCase() === activeTab
       }
       return false
     })
   }, [messages, activeTab])
 
 
-  const ordered = useMemo(() => [...filteredMessages].reverse(), [filteredMessages])
+  // 最新のメッセージ順にソート（新しいものが最後）
+  const sortedMessages = useMemo(() => {
+    return [...filteredMessages].sort((a, b) => {
+      const dateA = new Date(a.at || 0).getTime()
+      const dateB = new Date(b.at || 0).getTime()
+      return dateA - dateB
+    })
+  }, [filteredMessages])
+
+  // 最新10件を表示（残りはスクロールで見られる）
+  // 最新のメッセージを下に表示するため、時系列順（古い→新しい）
+  const displayedMessages = useMemo(() => {
+    const total = sortedMessages.length
+    if (total <= 10) {
+      return sortedMessages
+    }
+    return sortedMessages.slice(-10)
+  }, [sortedMessages])
+
+  // 過去のメッセージ（最新10件より前）
+  const pastMessages = useMemo(() => {
+    const total = sortedMessages.length
+    if (total <= 10) {
+      return []
+    }
+    return sortedMessages.slice(0, -10)
+  }, [sortedMessages])
 
   const submit = (e) => {
     e.preventDefault()
@@ -198,6 +230,20 @@ export default function Chat() {
     pushToast("メッセージを編集しました", "success")
   }
 
+  // 最新メッセージに自動スクロール
+  useEffect(() => {
+    if (messagesEndRef.current && messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+    }
+  }, [displayedMessages, activeTab])
+
+  // 最新メッセージに自動スクロール
+  useEffect(() => {
+    if (messagesEndRef.current && messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+    }
+  }, [displayedMessages, activeTab])
+
   return (
     <div className="pt-4">
       <div className="mx-auto w-full max-w-3xl">
@@ -228,8 +274,17 @@ export default function Chat() {
 
         {/* メッセージ一覧 */}
         <div className="mt-3 rounded-3xl border border-gray-300 bg-white p-4">
-          <div className="flex flex-col gap-3">
-            {ordered.map((m) => (
+          <div 
+            ref={messagesContainerRef}
+            className="max-h-[600px] overflow-y-auto flex flex-col gap-3"
+          >
+            {/* 過去のメッセージ（上にスクロールで見られる） */}
+            {pastMessages.length > 0 && (
+              <div className="text-xs text-gray-500 text-center py-2 border-b border-gray-200">
+                過去のメッセージ {pastMessages.length}件（上にスクロール）
+              </div>
+            )}
+            {pastMessages.map((m) => (
               <Bubble
                 key={m.id}
                 msg={m}
@@ -238,7 +293,19 @@ export default function Chat() {
                 onEdit={handleEdit}
               />
             ))}
-            {ordered.length === 0 && (
+            {/* 最新10件（下に表示） */}
+            {displayedMessages.map((m) => (
+              <Bubble
+                key={m.id}
+                msg={m}
+                mine={m.type === "user" && m.userName === (session?.userName || "")}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+              />
+            ))}
+            {/* スクロール位置の基準点（最新メッセージの下） */}
+            <div ref={messagesEndRef} />
+            {sortedMessages.length === 0 && (
               <div className="text-sm text-black opacity-70">
                 まだメッセージがありません。
               </div>

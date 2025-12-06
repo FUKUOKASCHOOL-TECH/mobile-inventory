@@ -22,6 +22,7 @@ import { useSession } from "../hooks/useSession.js"
 import { useToast } from "../components/Toast.jsx"
 import { toIntSafe, nowIso } from "../lib/utils.js"
 import { addLendingLog } from "../lib/supabaseItems.js"
+import { sendDiscordNotification } from "../lib/discordMock.js"
 
 function getTagBadge(tag) {
   if (!tag) return { label: "未分類", className: "border-zinc-800 bg-zinc-900/40 text-zinc-200" }
@@ -67,8 +68,16 @@ export default function Item() {
     await updateItem(next)
     await refreshItems()
 
-    if (prev === 1 && next.stock === 0) {
+    if (prev > 0 && next.stock === 0) {
       pushToast("在庫がゼロになりました", "warning")
+      // 在庫が0になった時に通知を送信
+      await sendDiscordNotification({
+        type: "stock_zero",
+        itemName: item.name,
+        item_type: item.item_type || item.category || "consumable",
+        category: item.item_type || item.category || "consumable",
+        timestamp: new Date().toISOString(),
+      })
     }
   }
 

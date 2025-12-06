@@ -24,6 +24,7 @@ import {
   deleteLendingLog 
 } from "../lib/supabaseItems.js";
 import { useToast } from "./Toast.jsx";
+import { sendDiscordNotification } from "../lib/discordMock.js";
 
 // ItemCard component - Premium UX design with white background and black text
 
@@ -159,6 +160,17 @@ export default function ItemCard({ item, onStockChange, onSharedAction }) {
         throw new Error(result?.error || "貸出ログの追加に失敗しました");
       }
 
+      // 共有物を借りた時に通知を送信
+      await sendDiscordNotification({
+        type: "lending",
+        itemName: item.name,
+        userName: userName.trim(),
+        item_type: item.item_type || item.category || "shared",
+        category: item.item_type || item.category || "shared",
+        quantity: borrowQuantity,
+        timestamp: new Date().toISOString(),
+      });
+
       pushToast(`${borrowQuantity}個を借りました`, "success");
       
       // モーダルを閉じて状態をリセット
@@ -267,6 +279,17 @@ export default function ItemCard({ item, onStockChange, onSharedAction }) {
         throw new Error(addResult?.error || "貸出ログの追加に失敗しました");
       }
 
+      // 予約から借りる時に通知を送信
+      await sendDiscordNotification({
+        type: "lending",
+        itemName: item.name,
+        userName: existingLog.user_name || "不明",
+        item_type: item.item_type || item.category || "shared",
+        category: item.item_type || item.category || "shared",
+        quantity: quantity,
+        timestamp: new Date().toISOString(),
+      });
+
       pushToast(`${quantity}個を借りました`, "success");
       
       if (onSharedAction) {
@@ -325,6 +348,18 @@ export default function ItemCard({ item, onStockChange, onSharedAction }) {
       if (!result || !result.success) {
         throw new Error(result?.error || "返却ログの更新に失敗しました");
       }
+
+      // 返却時に通知を送信
+      const returnLog = lendingLogs.find(log => log.id === logId);
+      await sendDiscordNotification({
+        type: "returned",
+        itemName: item.name,
+        userName: returnLog?.user_name || "不明",
+        item_type: item.item_type || item.category || "shared",
+        category: item.item_type || item.category || "shared",
+        quantity: returnQuantity,
+        timestamp: new Date().toISOString(),
+      });
 
       pushToast(`${returnQuantity}個を返却しました`, "success");
       
