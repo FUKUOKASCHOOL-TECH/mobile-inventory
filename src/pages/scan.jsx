@@ -152,8 +152,8 @@ export default function Scan() {
       <div className="rounded-3xl border border-gray-300 bg-white p-4 text-black">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-base font-semibold text-zinc-100">画像アップロード</h2>
-            <p className="mt-1 text-xs text-zinc-500">画像をアップロードして中のQRや画像からIDを抽出します。手入力での遷移も可能です。</p>
+            <h2 className="text-base font-semibold text-black">画像アップロード</h2>
+            <p className="mt-1 text-xs text-black">画像をアップロードして中のQRや画像からIDを抽出します。手入力での遷移も可能です。</p>
           </div>
         </div>
 
@@ -164,7 +164,7 @@ export default function Scan() {
             <div className="flex flex-col items-center gap-2 p-10 text-center">
               <IconCameraOff className="h-10 w-10 text-zinc-500" />
               <div className="text-sm font-semibold text-zinc-100">画像を選択してください</div>
-              <div className="text-xs text-zinc-500">アップロード後、サーバで解析して自動で遷移します。</div>
+              <div className="text-xs text-zinc-300">アップロード後、サーバで解析して自動で遷移します。</div>
             </div>
           )}
         </div>
@@ -184,7 +184,7 @@ export default function Scan() {
             className="hidden"
             id="image-upload-input"
           />
-          <label htmlFor="image-upload-input" className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 text-center cursor-pointer">
+          <label htmlFor="image-upload-input" className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-400 text-center cursor-pointer">
             {file ? file.name : "画像を選択（またはドラッグ＆ドロップ）"}
           </label>
           <button
@@ -218,9 +218,6 @@ export default function Scan() {
           </button>
         </form>
 
-        <div className="mt-4 text-[11px] text-black">
-          ヒント: 本番はQRの中身を <span className="text-black font-medium">/item/:id</span> のURLにすると運用が楽です。
-        </div>
 
         {/* 文字起こし結果表示 */}
         {transcribedText ? (
