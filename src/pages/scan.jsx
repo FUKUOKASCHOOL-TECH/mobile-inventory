@@ -187,13 +187,6 @@ export default function Scan() {
           <label htmlFor="image-upload-input" className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-400 text-center cursor-pointer">
             {file ? file.name : "画像を選択（またはドラッグ＆ドロップ）"}
           </label>
-          <button
-            className="shrink-0 rounded-2xl border border-zinc-800 bg-zinc-900/50 px-4 py-2 text-sm text-zinc-100 active:scale-[0.99]"
-            type="button"
-            onClick={uploadImage}
-          >
-            {status === "uploading" ? "送信中..." : "送信"}
-          </button>
 
           {/* 追加: 文字起こしボタン */}
           <button
