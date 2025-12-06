@@ -102,7 +102,7 @@ export default function Scan() {
     try {
       const fd = new FormData();
       fd.append("image", file);
-      const res = await fetch(`${SERVER_URL}/transcribe-image`, {
+      const res = await fetch(`${SERVER_URL}/transcribe`, {
         method: "POST",
         body: fd
       });
