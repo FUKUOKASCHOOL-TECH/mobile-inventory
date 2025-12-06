@@ -189,12 +189,25 @@ export default function Inventory() {
     const item = items.find((it) => it.id === itemId)
     if (!item) return
     
+    const prevStock = item.stock || 0
     const updated = {
       ...item,
       stock: Math.max(0, newStock),
     }
     // 即座に更新（updateItem内でfetchItemsが呼ばれるので、追加のrefreshItemsは不要）
     await updateItem(updated)
+    
+    // 在庫が0になった時に通知を送信
+    if (prevStock > 0 && newStock === 0) {
+      const { sendDiscordNotification } = await import("../lib/discordMock.js")
+      await sendDiscordNotification({
+        type: "stock_zero",
+        itemName: item.name,
+        item_type: item.item_type || item.category || "consumable",
+        category: item.item_type || item.category || "consumable",
+        timestamp: new Date().toISOString(),
+      })
+    }
   }
 
   const handleSharedAction = async () => {

@@ -59,12 +59,14 @@ export function parseQrValue(raw) {
 }
 
 export function genreToDiscordChannelKey(genre) {
+  // item_type（category）ベースに変更
   const g = String(genre || "").toLowerCase()
-  if (g === "kitchen") return "kitchen"
-  if (g === "bath") return "bath"
+  if (g === "food") return "food"
   if (g === "consumable") return "consumable"
-  if (g === "tool") return "tool"
-  return "other"
+  if (g === "shared") return "shared"
+  // 後方互換性のため、旧ジャンルもサポート
+  if (g === "kitchen" || g === "bath" || g === "tool") return "consumable"
+  return "consumable" // デフォルトは消耗品
 }
 
 export function dispatchToast(message, variant = "default") {

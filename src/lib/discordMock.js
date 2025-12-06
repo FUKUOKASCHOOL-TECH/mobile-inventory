@@ -20,22 +20,32 @@
 import { addChatMessage } from "./storage.js"
 import { dispatchToast, genreToDiscordChannelKey, generateId, nowIso } from "./utils.js"
 
-// ジャンル別 Webhook URL マッピング（テスト用・ローカル開発時）
+// 性質別 Webhook URL マッピング（テスト用・ローカル開発時）
 // 実際のテスト用 Webhook URL を環境変数から取得、または直接ここに貼り付け
+// 環境変数名:
+// - VITE_WEBHOOK_ALL: 全体の通知用Webhook URL
+// - VITE_WEBHOOK_FOOD: 食品の通知用Webhook URL
+// - VITE_WEBHOOK_CONSUMABLE: 消耗品の通知用Webhook URL
+// - VITE_WEBHOOK_SHARED: 共有物の通知用Webhook URL
 const WEBHOOK_URLS = {
+  all: import.meta.env.VITE_WEBHOOK_ALL || "",
+  food: import.meta.env.VITE_WEBHOOK_FOOD || "",
+  consumable: import.meta.env.VITE_WEBHOOK_CONSUMABLE || "",
+  shared: import.meta.env.VITE_WEBHOOK_SHARED || "",
+  // 後方互換性のため、旧ジャンルもサポート
   kitchen: import.meta.env.VITE_WEBHOOK_KITCHEN || "",
   bath: import.meta.env.VITE_WEBHOOK_BATH || "",
-  consumable: import.meta.env.VITE_WEBHOOK_CONSUMABLE || "",
   tool: import.meta.env.VITE_WEBHOOK_TOOL || "",
   other: import.meta.env.VITE_WEBHOOK_OTHER || ""
 }
 
 function buildText(payload) {
-  const ch = genreToDiscordChannelKey(payload.genre)
+  // item_typeまたはcategoryを使用（通知の性質を決定）
+  const itemType = payload.item_type || payload.category || payload.genre || "consumable"
   if (payload.type === "stock_zero") return `${payload.itemName} の在庫がなくなりました。`
-  if (payload.type === "lend") return `${payload.userName} さんに ${payload.itemName} を貸出しました。`
-  if (payload.type === "return") return `${payload.userName} さんが ${payload.itemName} を返却しました。`
-  return `[${ch}] 通知: ${payload.itemName}`
+  if (payload.type === "lend" || payload.type === "lending") return `${payload.userName} さんに ${payload.itemName} を貸出しました。`
+  if (payload.type === "return" || payload.type === "returned") return `${payload.userName} さんが ${payload.itemName} を返却しました。`
+  return `通知: ${payload.itemName}`
 }
 
 /**
@@ -43,11 +53,14 @@ function buildText(payload) {
  */
 async function sendToWebhook(payload) {
   try {
-    const genre = String(payload.genre || "other").toLowerCase()
-    const webhookUrl = WEBHOOK_URLS[genre]
+    // item_typeまたはcategoryを使用
+    const itemType = String(payload.item_type || payload.category || payload.genre || "consumable").toLowerCase()
+    // 全体の通知の場合は"all"を使用、それ以外はitem_typeを使用
+    const webhookKey = itemType === "all" ? "all" : itemType
+    const webhookUrl = WEBHOOK_URLS[webhookKey]
 
     if (!webhookUrl) {
-      console.warn(`⚠️ Webhook URL not found for genre: ${genre}`)
+      console.warn(`⚠️ Webhook URL not found for item_type: ${itemType}`)
       return false
     }
 
@@ -74,7 +87,10 @@ async function sendToWebhook(payload) {
 
 export async function sendDiscordNotification(payload) {
   // アプリ内チャットへ自動投稿
-  const msg = { id: generateId("msg_"), type: "system", text: buildText(payload), at: payload.timestamp || nowIso(), payload }
+  // payloadにitem_typeまたはcategoryを含める（通知の性質を決定）
+  const itemType = payload.item_type || payload.category || payload.genre || "consumable"
+  const msgPayload = { ...payload, item_type: itemType, category: itemType }
+  const msg = { id: generateId("msg_"), type: "system", text: buildText(payload), at: payload.timestamp || nowIso(), payload: msgPayload }
   addChatMessage(msg)
 
   // Webhook に直接送信（テスト用・環境変数に URL がある場合のみ）
