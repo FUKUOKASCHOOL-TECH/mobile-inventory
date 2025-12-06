@@ -129,11 +129,24 @@ app.post("/transcribe-image", upload.single("image"), async (req, res) => {
       const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
       const jsonFileName = `${timestamp}.json`;
       const jsonPath = path.join(JSONS_DIR, jsonFileName);
-      
-      fs.writeFileSync(jsonPath, JSON.stringify(parsed, null, 2), "utf8");
+
+      // 登録実行ユーザー名：フォームの userName -> ヘッダ x-registered-by -> フォールバック "unknown"
+      const regUser = (req.body && (req.body.userName || req.body.username)) || req.headers["x-registered-by"] || "unknown";
+
+      // 登録日時（年-月-日 時:分）を作成（西暦、分まで）
+      const registeredAt = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+      // 元のAI出力に追記（上書きを避けるため既存キーは保持しつつ追加）
+      const augmented = {
+        ...parsed,
+        registered_by: regUser,
+        registered_at: registeredAt
+      };
+
+      fs.writeFileSync(jsonPath, JSON.stringify(augmented, null, 2), "utf8");
       console.log(`Saved JSON to: ${jsonPath}`);
 
-      return res.json({ source: "genai", text, parsed, saved: true, filename: jsonFileName });
+      return res.json({ source: "genai", text, parsed: augmented, saved: true, filename: jsonFileName });
     } else {
       // パース失敗時はJSONファイルを出力しない
       return res.status(502).json({

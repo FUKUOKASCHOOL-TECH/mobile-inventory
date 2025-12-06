@@ -23,10 +23,12 @@ import React, { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { IconCameraOff } from "../components/Icons.jsx"
 import { useToast } from "../components/Toast.jsx"
+import { useSession } from "../hooks/useSession.js"
 
 export default function Scan() {
   const navigate = useNavigate()
   const { pushToast } = useToast()
+  const { session } = useSession()
   const [error, setError] = useState("")
   const [files, setFiles] = useState([]) // 複数ファイル
   const [previewUrl, setPreviewUrl] = useState(null) // 最初のプレビュー表示用
@@ -75,6 +77,8 @@ export default function Scan() {
         try {
           const fd = new FormData()
           fd.append("image", file)
+          // 現在ログイン中のユーザー名を送る（サーバが登録実行ユーザー名として利用）
+          fd.append("userName", session?.userName || "unknown")
           const res = await fetch("http://localhost:5000/transcribe-image", {
             method: "POST",
             body: fd
@@ -115,7 +119,9 @@ export default function Scan() {
       <div className="rounded-3xl border border-gray-300 bg-white p-4 text-black">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-base font-semibold text-zinc-100">画像アップロード</h2>
+            <h2 className="text-base font-semibold text-black">
+              レシート登録　登録者：{session?.userName || "未ログイン"}
+            </h2>
             <p className="mt-1 text-xs text-zinc-500">複数のレシート画像を選択して順次サーバで解析します。一回の処理ごとに90秒の間隔をおきます。</p>
           </div>
         </div>
