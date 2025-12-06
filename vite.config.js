@@ -10,6 +10,7 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: false,
+    emptyOutDir: true, // ビルド前に出力ディレクトリをクリア
     rollupOptions: {
       output: {
         manualChunks: {

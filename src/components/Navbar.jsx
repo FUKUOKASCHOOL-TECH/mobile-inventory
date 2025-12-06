@@ -45,7 +45,6 @@ export default function Navbar({ isMobile, userName, provider, onLogout }) {
 
         <div>
           <div className="text-sm font-semibold text-zinc-900">Inventory</div>
-          <div className="text-xs text-zinc-600">QR → 在庫 → 貸出/返却 → 通知</div>
         </div>
       </div>
 

@@ -149,14 +149,21 @@ export default function Chat() {
 
   // タブによるフィルタ
   const filteredMessages = useMemo(() => {
-    if (activeTab === "all") {
-      return messages.filter((m) => m.type === "user")
-    }
+    // 全体タブはすべてのメッセージを表示（必要に応じて user のみ等に変更可）
+    if (activeTab === "all") return messages
+
+    // その他タブは genre によるフィルタ
     return messages.filter((m) => {
-      if (m.type !== "system" || !m.payload) return false
-      return String(m.payload.genre || "").toLowerCase() === activeTab
+      if (m.type === "system" && m.payload) {
+        return String(m.payload.genre || "other").toLowerCase() === activeTab
+      }
+      if (m.type === "user") {
+        return String(m.genre || "other").toLowerCase() === activeTab
+      }
+      return false
     })
   }, [messages, activeTab])
+
 
   const ordered = useMemo(() => [...filteredMessages].reverse(), [filteredMessages])
 
@@ -166,17 +173,20 @@ export default function Chat() {
       pushToast("メッセージを入力してください", "danger")
       return
     }
+    // 送信時に genre を付与（全体タブは genre を付けない）
     const msg = {
       id: generateId("msg_"),
       type: "user",
       text: text.trim(),
       at: nowIso(),
       userName: session?.userName || "unknown",
-      edited: false
+      edited: false,
+      genre: activeTab === "all" ? undefined : activeTab
     }
-    send(msg)
+    send(msg) // [`useChat`](src/hooks/useChat.js) の send がローカルに保存する
     setText("")
   }
+
 
   const handleDelete = (id) => {
     deleteChatMessage(id)
@@ -195,7 +205,6 @@ export default function Chat() {
         {/* タイトルカード */}
         <div className="rounded-3xl border border-gray-300 bg-white p-4 text-black">
           <div className="text-base font-semibold">チャット</div>
-          <div className="mt-1 text-xs">自動投稿: lend / return / stock_zero（Discord通知モック）</div>
         </div>
 
         {/* タブ */}
