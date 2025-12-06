@@ -207,9 +207,6 @@ export default function Inventory() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold text-gray-900">在庫一覧</h2>
-          <div className="mt-1 text-xs text-gray-700">
-            スマホは1列、PCは2〜3列表示。
-          </div>
         </div>
 
         <button
@@ -245,7 +242,6 @@ export default function Inventory() {
 
         {/* ジャンルフィルター */}
         <div className="mt-4">
-          <div className="mb-2 text-xs text-gray-600">ジャンルでフィルター</div>
           <div className="flex flex-wrap gap-2">
             <button
               className={`

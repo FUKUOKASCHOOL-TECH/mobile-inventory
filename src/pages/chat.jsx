@@ -205,7 +205,6 @@ export default function Chat() {
         {/* タイトルカード */}
         <div className="rounded-3xl border border-gray-300 bg-white p-4 text-black">
           <div className="text-base font-semibold">チャット</div>
-          <div className="mt-1 text-xs">自動投稿: lend / return / stock_zero（Discord通知モック）</div>
         </div>
 
         {/* タブ */}
